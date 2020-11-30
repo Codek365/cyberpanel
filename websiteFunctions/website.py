@@ -233,6 +233,11 @@ class WebsiteManager:
                        ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend  + " --mailDomain %s" % (mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
+            command = '/usr/local/CyberCP/CPScripts/customscript.sh ' \
+                + domain \
+                + websiteOwner \
+                + data['customOptions']
+            ProcessUtilities.popenExecutioner(command)
             time.sleep(2)
 
             data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
@@ -399,6 +404,26 @@ class WebsiteManager:
 
             final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
                          'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    def fetchWebsitesListAPI(self, userID=None, data=None):
+        websiteOwner = Administrator.objects.get(userName=data['websiteOwner'])
+        currentACL = ACLManager.loadedACL(websiteOwner.pk)
+        try:
+            pageNumber = int(1)
+
+            finalPageNumber = ((pageNumber * 10)) - 10
+            endPageNumber = finalPageNumber + 10
+            websites = ACLManager.findWebsiteObjects(currentACL, websiteOwner.pk)[finalPageNumber:endPageNumber]
+            # pagination = self.getPagination(len(websites), recordsToShow)
+            json_data = self.findWebsitesListJson(websites[finalPageNumber:endPageNumber])
+
+            final_dic = json_data
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
         except BaseException as msg:
