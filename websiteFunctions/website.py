@@ -416,15 +416,10 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(websiteOwner.pk)
         try:
             pageNumber = int(1)
-
-            
             recordsToShow = int(1000)
-
             endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
             websites = ACLManager.findWebsiteObjects(currentACL, websiteOwner.pk)[finalPageNumber:endPageNumber]
-            # pagination = self.getPagination(len(websites), recordsToShow)
             json_data = self.findWebsitesListJsonAPI(websites[finalPageNumber:endPageNumber])
-
             final_dic = json_data
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
