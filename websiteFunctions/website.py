@@ -417,11 +417,13 @@ class WebsiteManager:
         try:
             pageNumber = int(1)
 
-            finalPageNumber = ((pageNumber * 10)) - 10
-            endPageNumber = finalPageNumber + 10
+            
+            recordsToShow = int(1000)
+
+            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
             websites = ACLManager.findWebsiteObjects(currentACL, websiteOwner.pk)[finalPageNumber:endPageNumber]
             # pagination = self.getPagination(len(websites), recordsToShow)
-            json_data = self.findWebsitesListJson(websites[finalPageNumber:endPageNumber])
+            json_data = self.findWebsitesListJsonAPI(websites[finalPageNumber:endPageNumber])
 
             final_dic = json_data
             final_json = json.dumps(final_dic)
@@ -458,7 +460,7 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
     def findWebsitesListJson(self, websites):
-
+    
         json_data = "["
         checker = 0
 
@@ -483,6 +485,49 @@ class WebsiteManager:
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
+
+    def findWebsitesListJsonAPI(self, websites):
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        for items in websites:
+            if items.state == 0:
+                state = "Suspended"
+            else:
+                state = "Active"
+
+            #diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+
+            diskUsed = '1MB' ## to be fixed later
+
+            dic = { 'domain': items.domain, 
+                    # 'adminEmail': items.adminEmail, 
+                    # 'ipAddress': ipAddress,
+                    # # 'package': items.package.packageName, 
+                    # 'state': state, 
+                    # 'diskUsed': diskUsed,
+                    'admin': items.admin.userName
+                    }
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
