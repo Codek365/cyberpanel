@@ -239,8 +239,12 @@ class WebsiteManager:
                 + data['customOptions']
             ProcessUtilities.popenExecutioner(command)
             time.sleep(2)
-
-            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
+            websiteOwner = Administrator.objects.get(userName=websiteOwner)
+            userData = ACLManager.loadedACL(websiteOwner.pk)
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 
+                        'error_message': "None", 
+                        "userID" : websiteOwner.pk,
+                        "userData" : userData,
                         'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -417,9 +421,12 @@ class WebsiteManager:
         try:
             pageNumber = int(1)
             recordsToShow = int(1000)
+
             endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
             websites = ACLManager.findWebsiteObjects(currentACL, websiteOwner.pk)[finalPageNumber:endPageNumber]
+            # pagination = self.getPagination(len(websites), recordsToShow)
             json_data = self.findWebsitesListJsonAPI(websites[finalPageNumber:endPageNumber])
+
             final_dic = json_data
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -515,14 +522,16 @@ class WebsiteManager:
 
             diskUsed = '1MB' ## to be fixed later
 
-            dic = { 'domain': items.domain, 
-                    # 'adminEmail': items.adminEmail, 
-                    # 'ipAddress': ipAddress,
-                    # # 'package': items.package.packageName, 
-                    # 'state': state, 
-                    # 'diskUsed': diskUsed,
-                    'admin': items.admin.userName
-                    }
+            # dic = { 'domain': items.domain, 
+            #         # 'adminEmail': items.adminEmail, 
+            #         # 'ipAddress': ipAddress,
+            #         # # 'package': items.package.packageName, 
+            #         # 'state': state, 
+            #         # 'diskUsed': diskUsed,
+            #         'admin': items.admin.userName
+            #         }
+
+            dic = { 'domain' : items.domain }
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -2514,7 +2523,7 @@ StrictHostKeyChecking no
                     pass
 
             else:
-                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
+                data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0, 
                             'error_message': "Could not authorize access to API"}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
