@@ -243,8 +243,8 @@ class WebsiteManager:
             userData = ACLManager.loadedACL(websiteOwner.pk)
             data_ret = {'status': 1, 'createWebSiteStatus': 1, 
                         'error_message': "None", 
-                        "userID" : websiteOwner.pk,
-                        "userData" : userData,
+                        'userID' : websiteOwner.pk,
+                        'userData' : userData,
                         'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
